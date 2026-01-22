@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'PostUp - LinkedIn Post Generator',
-  description: 'Generate viral LinkedIn posts with AI',
+  title: 'PostUp | LTG Vault',
+  description: 'Turn rough ideas into polished LinkedIn posts that actually get engagement.',
 }
 
 export default function RootLayout({
@@ -13,7 +13,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-900 text-white min-h-screen">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+      </head>
+      <body>
         {children}
       </body>
     </html>
