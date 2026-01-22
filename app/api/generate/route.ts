@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
     }
 
-    const apiKey = process.env.OPENAI_API_KEY
+    const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
-      return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
+      return NextResponse.json({ error: 'Anthropic API key not configured' }, { status: 500 })
     }
 
     // Build prompts
@@ -30,22 +30,21 @@ export async function POST(request: NextRequest) {
       userPrompt = buildGenerationPrompt(content)
     }
 
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Anthropic Claude API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.8,
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 2500,
-        response_format: { type: 'json_object' }
+        system: systemPrompt,
+        messages: [
+          { role: 'user', content: userPrompt }
+        ]
       })
     })
 
@@ -58,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    const rawContent = data.choices?.[0]?.message?.content
+    const rawContent = data.content?.[0]?.text
 
     if (!rawContent) {
       return NextResponse.json({ error: 'Empty response from AI' }, { status: 500 })
@@ -68,7 +67,12 @@ export async function POST(request: NextRequest) {
     if (action) {
       return NextResponse.json({ result: rawContent.trim() })
     } else {
-      const parsed = JSON.parse(rawContent)
+      // Extract JSON from response (Claude may include extra text)
+      const jsonMatch = rawContent.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) {
+        return NextResponse.json({ error: 'Failed to parse response' }, { status: 500 })
+      }
+      const parsed = JSON.parse(jsonMatch[0])
       return NextResponse.json({ result: parsed })
     }
 
